@@ -1,0 +1,7 @@
+# Google AI API Key
+GOOGLE_API_KEY=your_google_api_key_here
+
+# Optional: Razorpay Configuration (if you want to add payment features later)
+# RAZORPAY_KEY_ID=your_razorpay_key_id
+# RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+# ANALYSIS_PRICE_INR=49
