@@ -69,19 +69,35 @@ def input_pdf_setup(uploaded_file):
             # On non-Windows, ensure poppler is available in PATH (pdftoppm)
             if os.name != 'nt':
                 if shutil.which('pdftoppm') is None:
-                    raise ValueError(
-                        "Unable to get page count. Poppler is not available (pdftoppm missing). "
-                        "If running on Streamlit Cloud, ensure 'packages.txt' contains 'poppler-utils' and then reboot the app."
-                    )
+                    # Fallback: send the original PDF to Gemini directly
+                    st.info("Poppler not found on system. Falling back to direct PDF processing.")
+                    pdf_bytes = uploaded_file.getvalue()
+                    pdf_parts = [{
+                        "mime_type": "application/pdf",
+                        "data": base64.b64encode(pdf_bytes).decode()
+                    }]
+                    logger.info(f"Using fallback direct PDF upload for: {uploaded_file.name}")
+                    return pdf_parts
 
             # Convert PDF to image
-            images = pdf2image.convert_from_bytes(
-                uploaded_file.getvalue(),
-                poppler_path=poppler_path,
-                dpi=200,  # Good quality for analysis
-                first_page=1,
-                last_page=1  # Only process first page for efficiency
-            )
+            try:
+                images = pdf2image.convert_from_bytes(
+                    uploaded_file.getvalue(),
+                    poppler_path=poppler_path,
+                    dpi=200,  # Good quality for analysis
+                    first_page=1,
+                    last_page=1  # Only process first page for efficiency
+                )
+            except Exception as e:
+                # Fallback: if conversion fails for any reason, pass the PDF directly
+                logger.warning(f"pdf2image conversion failed ({str(e)}). Falling back to direct PDF upload.")
+                st.info("Could not convert PDF to image. Falling back to direct PDF processing.")
+                pdf_bytes = uploaded_file.getvalue()
+                pdf_parts = [{
+                    "mime_type": "application/pdf",
+                    "data": base64.b64encode(pdf_bytes).decode()
+                }]
+                return pdf_parts
 
             if not images:
                 raise ValueError("Could not extract images from PDF")
