@@ -7,6 +7,7 @@ import base64
 import time
 import logging
 from PIL import Image
+import shutil
 import pdf2image
 import google.generativeai as genai
 from google.api_core import exceptions as gcp_exceptions
@@ -65,6 +66,14 @@ def input_pdf_setup(uploaded_file):
                         poppler_path = path
                         break
             
+            # On non-Windows, ensure poppler is available in PATH (pdftoppm)
+            if os.name != 'nt':
+                if shutil.which('pdftoppm') is None:
+                    raise ValueError(
+                        "Unable to get page count. Poppler is not available (pdftoppm missing). "
+                        "If running on Streamlit Cloud, ensure 'packages.txt' contains 'poppler-utils' and then reboot the app."
+                    )
+
             # Convert PDF to image
             images = pdf2image.convert_from_bytes(
                 uploaded_file.getvalue(),
