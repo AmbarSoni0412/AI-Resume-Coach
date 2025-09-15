@@ -70,7 +70,6 @@ def input_pdf_setup(uploaded_file):
             if os.name != 'nt':
                 if shutil.which('pdftoppm') is None:
                     # Fallback: send the original PDF to Gemini directly
-                    st.info("Poppler not found on system. Falling back to direct PDF processing.")
                     pdf_bytes = uploaded_file.getvalue()
                     pdf_parts = [{
                         "mime_type": "application/pdf",
